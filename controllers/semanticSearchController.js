@@ -80,17 +80,19 @@ function appendToCache(text, embeddingVector) {
   cacheMap.set(text, embeddingVector);
 }
 
-const semanticSearch = async (searchTerm, targetList, k) => {
+const semanticSearch = async (req, res) => {
+
+  const {search_term, target_list, k} = req.body;
 
   // Generate the search term embedding
-  const searchTermEmbedding = await generatEembeddingWithCache(searchTerm);
+  const searchTermEmbedding = await generatEembeddingWithCache(search_term);
 
   // An array to hold the similarities
   let similarities = [];
 
   // Iterate over each string in the target list
-  for (let i = 0; i < targetList.length; i++) {
-      const target = targetList[i];
+  for (let i = 0; i < target_list.length; i++) {
+      const target = target_list[i];
 
       // Generate the target's embedding
       const targetEmbedding = await generatEembeddingWithCache(target);
@@ -111,9 +113,8 @@ const semanticSearch = async (searchTerm, targetList, k) => {
   similarities.sort((a, b) => b.similarity - a.similarity);
 
   // Return the top k
-  return similarities.slice(0, k);
+  res.status(200).json(similarities.slice(0, k))
 }
-
 const cosineSimilarity = (vecA, vecB) => {
   return dotProduct(vecA, vecB) / (norm(vecA) * norm(vecB));
 };

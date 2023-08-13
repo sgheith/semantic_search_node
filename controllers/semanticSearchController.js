@@ -11,7 +11,7 @@ const generatEembedding = async (text) => {
     model: "text-embedding-ada-002",
     input: text,
   });
-  
+
   //console.log(response.data.data[0].embedding);
 
   return response.data.data[0].embedding
@@ -79,6 +79,39 @@ function appendToCache(text, embeddingVector) {
   // Update the cacheMap with the new entry
   cacheMap.set(text, embeddingVector);
 }
+
+const semanticSearch = async (searchTerm, targetList, k) => {
+
+  // Generate the search term embedding
+  const searchTermEmbedding = await generatEembeddingWithCache(searchTerm);
+
+  // An array to hold the similarities
+  let similarities = [];
+
+  // Iterate over each string in the target list
+  for (let i = 0; i < targetList.length; i++) {
+      const target = targetList[i];
+
+      // Generate the target's embedding
+      const targetEmbedding = await generatEembeddingWithCache(target);
+
+      // Compute the similarity between the search term and the target
+      const similarity = cosineSimilarity(searchTermEmbedding, targetEmbedding);
+
+      // Add the similarity, target, index and target's embedding to the list of similarities
+      similarities.push({ 
+          index: i, 
+          text: target, 
+          similarity: similarity,
+          //vector: targetEmbedding
+      });
+  }
+
+  // Sort the similarities in descending order
+  similarities.sort((a, b) => b.similarity - a.similarity);
+
+  // Return the top k
+  return similarities.slice(0, k);
 }
 
 const cosineSimilarity = (vecA, vecB) => {
@@ -101,4 +134,4 @@ const dotProduct = (vecA, vecB) => {
   return product;
 };
 
-module.exports = { generatEembedding, cosineSimilarity, generatEembeddingWithCache }
+module.exports = { semanticSearch }
